@@ -1,0 +1,38 @@
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+## Reading data
+
+**Vector data** - use `sf` package and `st_read()` function
+
+**Raster data** - use the raster package and `raster()` or `brick()`
+function
+
+`raster()` function is for reading single band rasters `brick()`
+function is for reading multi-band rasters
+
+## Writing data
+
+**Vector data** - use st_write(m_poly, "path/to/file.ext")
+
+**Raster data** - writeRaster(my_raster, "path/to/raster.ext")
+
+```{r}
+# load sf package
+library(sf)
+
+# read in the trees shapefile
+trees <- st_read("data/trees/trees.shp")
+
+# read in neighborhoods
+neighborhoods <- st_read("data/neighborhoods/neighborhoods.shp")
+
+# read in parks
+parks <- st_read("data/parks/parks.shp")
+
+# view the first few trees
+head(trees)
+```
