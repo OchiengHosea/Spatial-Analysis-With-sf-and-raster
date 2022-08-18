@@ -1,0 +1,8 @@
+---
+title: "basic_raster_data_functions"
+author: "Duke"
+date: "2022-08-18"
+output: html_document
+---
+
+## About Raster data
