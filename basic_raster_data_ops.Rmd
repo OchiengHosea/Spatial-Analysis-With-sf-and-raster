@@ -6,3 +6,148 @@ output: html_document
 ---
 
 ## About Raster data
+
+The data metadata about raster can be accessed using various functions.
+
+The most basic ones are...
+
+-   `extent()` - shows the spatial extent
+
+-   `crs()` - shows the coordinate reference system
+
+-   `ncell()` - shows the number of grid cells
+
+```{r}
+# load the raster package
+library(raster)
+
+# read in the rasters
+canopy <- raster("data/canopy.tif")
+manhatttan <- brick("data/manhattan.tif")
+
+# get the extent of canopy layer
+extent(canopy)
+crs(manhattan)
+
+ncell(canopy)
+ncell(manhattan)
+```
+
+### Accessing raster data values
+
+to show that raster is in memory, one can use `inMemory()` function on an object
+
+If you use the `head()` function, the raster package will read in only the values needed. not the full set of values
+
+If you perform spatial analysis that require it, you can read in in values from a raster manually with the function `getValues()`
+
+```{r}
+# determine if canopy has been read in
+inMemory(canopy)
+
+head(canopy)
+
+#use getValues to read in the values into a vector
+vals <- getValues(canopy)
+
+# use hist to create a quick histogram of the values
+hist(vals)
+```
+
+### Plot raster object
+
+one can use `plot()` function for single band or `plotRGB()` to plot the raster layers together as a single image
+
+```{r}
+plot(canopy)
+```
+
+```{r}
+plot(manhattan)
+```
+
+```{r}
+plotRGB(manhattan)
+```
+
+### Vector and raster coordinate systems
+
+Spatial Operations on multi-layered datasets require that the datasets have the same coordinate reference systems. use `st_crs()` on vector data and `crs` on the raster crs can be defined using espg or proj4string
+
+```{r}
+# determine the crs for neighborhoods and trees
+st_crs(neighborhoods)
+st_crs(trees)
+```
+
+```{r}
+# Assign crs for trees
+csr_1 <- "+proj=longlat +ellps=WGS84 +no_defs"
+st_crs(trees) <- csr_1
+
+```
+
+```{r}
+# determine the CRS for the canopy
+crs(canopy)
+crs(manhattan)
+```
+
+```{r}
+# assing the crs for manhattan
+crs_2 <- "+proj=utm +zone=18 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+crs(manhattan) <- crs_2
+```
+
+### Transforming your layers to a common crs
+
+The process of transforming crs of layers to have the same crs for purposes of spatial analysis is called projection.
+
+To check if your object has a projected crs crs, you can look at the part of the result `st_crs()` or `crs`() **If it begins with +proj=longlat then your crs is unprojected**
+
+For raster, use `projectRaster()` to prevent distortion.
+
+```{r}
+the_crs <- st_crs(canopy, asText=TRUE)
+
+# project trees to match the CRS canopy
+trees_crs <- st_transform(trees, crs=the_crs)
+
+# project neighborhoods to match the crs for canopy
+naighborhood_crs <- st_transform(neighborhoods, crs=the_crs)
+
+#project manhattan to math the crs of canopy
+manhattan_crs <- projectRaster(manhattan, crs=the_crs, method="ngb")
+
+st_crs(trees_crs)
+st_crs(neighborhoods_crs)
+crs(manhattan_crs)
+```
+
+### Plot vector and raster data together
+
+```{r}
+plot(canopy)
+plot(neighborhoods, add=TRUE)
+```
+
+```{r}
+crs(neighborhoods)
+crs(canopy)
+```
+
+Neighborhoods cant be seen because the crs are different
+
+do a reprojection
+
+```{r}
+neighborhoods_crs <- st_transform(neighborhoods, crs = the_crs)
+plot(canopy)
+
+plot(neighborhoods_crs, add=TRUE)
+
+tm_shape(canopy) + 
+    tm_raster() + 
+    tm_shape(neighborhoods_crs) + 
+    tm_polygons(alpha = 0.5)
+```
