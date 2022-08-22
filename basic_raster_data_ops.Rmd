@@ -151,3 +151,105 @@ tm_shape(canopy) +
     tm_shape(neighborhoods_crs) + 
     tm_polygons(alpha = 0.5)
 ```
+
+### Dropping geometry from a dataframe
+
+if you want to force the geometry to b dropped, use the fs function `st_set_geometry()` and set the geometry to be null
+
+```{r}
+# create a dataframe of counts by species
+species_counts = count(trees, species, sort = TRUE)
+
+head(species_counts)
+
+# drop the geometry column
+
+st_set_geometry(species_counts, NULL)
+
+head(species_counts)
+```
+
+## Join spatial and non spatial data
+
+```{r}
+# limits the fields boro_name, county_fip, boro_code
+
+boro <- select(neighborhoods, boro_name,county_fip, boro_code)
+
+# drop the geometry column
+boro_no_geometry <- st_set_geometry(boro, NULL)
+
+# get only distinct countries
+boro_distinct <- distinct(boro_no_geometry)
+
+# join the country detail into trees object
+trees_with_county <- inner_join(trees, boro_distinct, by =c("boroname" = "boro_name"))
+
+head(trees_with_county)
+```
+
+### Simplify the neighborhoods boundaries
+
+One can use the `st_simplify()` to reduce line and polygon complexity
+
+```{r}
+library(pryr)
+# plot geometry of neighborhoods
+plot(st_geometry(neighborhoods), col="grey")
+
+# measure the size of the neighborhoods object
+object_size(neighborhoods)
+
+# compute the number of vertices in the neughborhoods object
+
+pts_neighborhoods <- st_cast(neighborhoods$geometry, "MULTIPOINT")
+cnt_neighborhoods <- sapply(pts_neighborhoods, length)
+sum(cnt_neighborhoods)
+
+# simplify the number of vertices in the neighborhoods object
+
+neighborhoods_simple <- st_simplify(neighborhoods, preserveTopology = TRUE, dTolerance = 100)
+
+# compute the object size of neighborhoods simple
+object_size(neighborhoods_simple)
+pts_neighborhoods_simple <- st_cast(neighborhoods_simple$geometry, "MULTIPOINT")
+cnt_neighborhoods_simple = sapply(pts_neighborhoods_simple, length)
+sum(cnt_neighborhoods_simple)
+
+plot(st_geometry(neighborhoods_simple), col="grey")
+```
+
+### Converting objects to sp objects
+
+```{r}
+# read in trees shapefile 
+trees <- st_read("data/trees/trees.shp")
+
+# convert to Spatial class
+trees_sp <- as(trees, Class = "Spatial")
+
+class(trees_sp)
+
+trees_sf <- st_as_sf(trees_sp)
+class(trees_sf)
+```
+
+### Converting to and from cooordinates
+
+```{r}
+# read in trees scv
+
+trees_df <- read.csv("data/trees.csv")
+
+# convert the dataframe into an sf object
+trees_sf <- st_as_sf(trees_df, coords = c("X", "Y"), crs=4326)
+plot(st_geometry(trees_sf))
+
+# write the file out with coordinates
+
+st_write(trees_sf, "new_trees.csv", layer_options = "GEOMETRY=AS_XY", delete_dsn = TRUE)
+
+# read in the file
+new_trees = read.csv("new_trees.csv")
+head(new_trees)
+```
