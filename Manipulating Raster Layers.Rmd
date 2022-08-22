@@ -1,0 +1,7 @@
+---
+title: "Manipulating Raster Layers"
+author: "Duke"
+date: "2022-08-22"
+output: html_document
+---
+
