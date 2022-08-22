@@ -5,3 +5,36 @@ date: "2022-08-22"
 output: html_document
 ---
 
+## Reclassification and Aggregation
+
+to reduce the resolution of raster - use `aggregate()` function which aggregates grid cells into larger grid cells using user defined function like mean, max or mode amount if aggregations ins driven by the fact arg, default is 2
+
+```{r}
+library(raster)
+canopy <- raster("data/canopy.tif")
+plot(canopy)
+
+# determine the resolution of the canopy
+res(canopy)
+
+# detemine the number of cells
+ncell(canopy)
+
+# aggregate he raster
+ canopy_small <- aggregate(canopy, fact=10)
+ 
+ plot(canopy_small)
+ res(canopy_small)
+ ncell(canopy_small)
+```
+
+### Change values and handle missing values in rasters
+
+```{r}
+vals <- cbind(100, 300, NA)
+
+# reclassify 
+canopy_reclass <- reclassify(canopy, rcl = vals)
+
+plot(canopy_reclass)
+```
