@@ -38,3 +38,39 @@ canopy_reclass <- reclassify(canopy, rcl = vals)
 
 plot(canopy_reclass)
 ```
+
+```{r}
+library(sf)
+manhattan <- brick("data/manhattan.tif")
+# Review df
+df
+
+# Convert the data frame to an sf object             
+df_sf <- st_as_sf(df, coords = c("longitude", "latitude"), crs=4326)
+
+# Transform the points to match the manhattan CRS
+df_crs <- st_transform(df_sf, crs = crs(manhattan, asText = TRUE))
+
+# Buffer the points
+df_buf <- st_buffer(df_crs, dist = 1000)
+
+# Plot the manhattan image (it is multi-band)
+plotRGB(manhattan)
+plot(st_geometry(df_buf), col = "firebrick", add = TRUE)
+plot(st_geometry(df_crs), pch = 16, add = TRUE)
+```
+
+```{r}
+# Read in the neighborhods shapefile
+neighborhoods <- st_read("neighborhoods.shp")
+
+# Project neighborhoods to match manhattan
+neighborhoods_tf <- st_transform(neighborhoods, crs = 32618)
+
+# Compute the neighborhood centroids
+centroids <- st_centroid(neighborhoods_tf)
+
+# Plot the neighborhood geometry
+plot(st_geometry(neighborhoods_tf), col = "grey", border = "white")
+plot(centroids, pch = 16, col = "firebrick", add = TRUE)
+```
