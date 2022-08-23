@@ -1,0 +1,34 @@
+---
+title: "Geoprocessing with rasters"
+author: "Duke"
+date: "2022-08-23"
+output: html_document
+---
+
+### Limit rasters to focus areas
+
+With `mask()` you essentially place your ares of interest on top of the raster and any raster cells outside the boundary are assigned NA values
+
+```{r}
+library(sf)
+library(raster)
+parks <- st_read("data/parks/parks.shp")
+canopy <- raster("data/canopy.tif")
+
+parks_cp <- st_transform(parks, crs = crs(canopy, asText=TRUE))
+
+# compute the areas of the parks
+areas <- st_area(parks_cp)
+# filter the parks with areas > 3000
+
+parks_big <- filter(parks_cp, unclass(areas) > 3000)
+
+plot(canopy)
+
+plot(st_geometry(parks_big))
+
+# convert parks to spatial object
+parks_sp <- as(parks_big, "Spatial")
+
+canopy_mask <- mask(canopy, mask=parks_sp)
+```
