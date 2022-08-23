@@ -62,7 +62,7 @@ plot(st_geometry(df_crs), pch = 16, add = TRUE)
 
 ```{r}
 # Read in the neighborhods shapefile
-neighborhoods <- st_read("neighborhoods.shp")
+neighborhoods <- st_read("data/neighborhoods/neighborhoods.shp")
 
 # Project neighborhoods to match manhattan
 neighborhoods_tf <- st_transform(neighborhoods, crs = 32618)
@@ -73,4 +73,66 @@ centroids <- st_centroid(neighborhoods_tf)
 # Plot the neighborhood geometry
 plot(st_geometry(neighborhoods_tf), col = "grey", border = "white")
 plot(centroids, pch = 16, col = "firebrick", add = TRUE)
+```
+
+### Bounding Boxes, dissolve features and create a convex hull
+
+```{r}
+plot(neighborhoods, col="grey", border="white")
+plot(beech, add=TRUE, pch=16,col="forestgreen")
+st_bbox(beech)
+
+beech_bbox <- st_make_grid(beech, n=1)
+plot(st_geometry(neighborhoods), col="grey", border="white")
+plot(beech, add=TRUE, pch=16, col="forestgreen")
+plot(beech_bbox, add=TRUE)
+```
+
+### Dissolve multiple features into One
+
+If you have a set of points and you want to draw a convex hull around them you first need to bundle the points into a single MULTIPOINT feature and in order to do this, you will use the dissolve function in `sf` called `st_unioin()`
+
+With polygons, `st_union()` will dissolve all the polygons into a single polygon representing the area where all the polygons overlap.
+
+```{r}
+# buffer the beach object by 3000
+beech_buffer <- st_buffer(beech, 3000)
+
+# Limit the object to just geometry
+beech_buffers <- st_geometry(beech_buffer)
+
+# compute the number of features in beech_buffers
+length(beech_buffers)
+
+#plot the tree buffers
+plot(beech_buffers)
+
+beech_buf_union <- st_union(beech_buffers)
+
+length(beech_buf_union)
+
+plot(beech_buf_union)
+```
+
+### Compute a convex hull around vectors
+
+A more precise bounding polygon is sometimes needed, one that fits your data more tightly.
+
+For this. you can use the `st_convex_hull()` function.
+
+```{r}
+head(beech)
+
+beech1 <- st_union(beech)
+
+head(beech1)
+
+length(beech)
+length(beech1)
+
+# compute a tight bounding box
+beech_hull <- st_convex_hull(beech1)
+
+plot(beech_hull, col="red")
+plot(beech1, add=TRUE)
 ```
