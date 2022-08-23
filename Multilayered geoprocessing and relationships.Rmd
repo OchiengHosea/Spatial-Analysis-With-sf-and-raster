@@ -1,0 +1,77 @@
+---
+title: "Multilayered geoprocessing and relationships"
+author: "Duke"
+date: "2022-08-23"
+output: html_document
+---
+
+### Spatial Joins
+
+If you want to know how many trees are in each neighborhood but you dont have a neighborhood attribute in the tree data. the best way to do this is to use `st_join()`
+
+`st_join()` function requires sf dataframes as input and will not accept object that is just sf geometry. You can use `st_sf()` function to convert sf geometry objects to an sf dataframe.
+
+```{r}
+plot(st_geometry(neighborhoods))
+
+# plot the beech on top of the neighborhoods
+plot(beech, add=TRUE, pch=16, col="red")
+
+# convert the beech geometry to a sf dataframe
+beech_df <- st_sf(beech)
+head(beech_df)
+
+# join the beech trees with the neighborhoods
+beech_neigh <- st_join(beech_df, neighborhoods)
+head(beech_neigh)
+```
+
+### Spatial relationships
+
+```{r}
+# Identify neighborhoods that intersect with the buffer
+neighborhoods_int <- st_intersects(buf, neighborhoods)
+
+# Identify neighborhoods contained by the buffer
+neighborhoods_cont <- st_contains(buf, neighborhoods)
+
+# Get the indexes of which neighborhoods intersect
+# and are contained by the buffer
+int <- neighborhoods_int[[1]]
+cont <- neighborhoods_cont[[1]]
+
+# Get the names of the names of neighborhoods in buffer
+neighborhoods$ntaname[int]
+
+# Clip the neighborhood layer by the buffer (ignore the warning)
+neighborhoods_clip <- st_intersection(buf, neighborhoods)
+
+# Plot the geometry of the clipped neighborhoods
+plot(st_geometry(neighborhoods_clip), col = "red")
+plot(neighborhoods[cont,], add = TRUE, col = "yellow")
+```
+
+### Measuring distance between features
+
+```{r}
+# Read in the parks object
+parks <- st_read("data/parks/parks.sh")
+
+# Test whether the CRS match
+crs(empire_state) == crs(parks)
+
+# Project parks to match empire state
+parks_es <- st_transform(parks, crs = crs(empire_state))
+
+# Compute the distance between empire_state and parks_es
+d <- st_distance(empire_state, parks_es)
+
+# Take a quick look at the result
+head(d)
+
+# Find the index of the nearest park
+nearest <- which.min(d)
+
+# Identify the park that is nearest
+parks_es[nearest, ]
+```
