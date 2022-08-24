@@ -1,0 +1,67 @@
+---
+title: "Analysing tree canopy"
+author: "Duke"
+date: "2022-08-24"
+output: html_document
+---
+
+In order to compute tree density by neighborhood, you need two things, you will need to know the areas of the neighborhood and tree counts by neighborhood
+
+You will produce counts of all trees by neighborhood in
+
+```{r}
+# Compute the counts of all trees by hood
+tree_counts <- count(trees, hood)
+
+# Take a quick look
+head(tree_counts)
+
+# Remove the geometry
+tree_counts_no_geom <- st_set_geometry(tree_counts, NULL)
+
+# Rename the n variable to tree_cnt
+tree_counts_renamed <- rename(tree_counts_no_geom, tree_cnt = n)
+  
+# Create histograms of the total counts
+hist(tree_counts_renamed$tree_cnt)
+```
+
+```{r}
+# Compute areas and unclass
+areas <- unclass(st_area(neighborhoods))
+
+# Add the areas to the neighborhoods object
+neighborhoods_area <- mutate(neighborhoods, area = areas)
+
+# Join neighborhoods and counts
+neighborhoods_counts <- left_join(neighborhoods_area, 
+                            tree_counts_renamed, by = "hood")
+
+# Replace NA values with 0
+neighborhoods_counts <- mutate(neighborhoods_counts, 
+                            tree_cnt = ifelse(is.na(tree_cnt), 
+                                              0, tree_cnt))
+
+# Compute the density
+neighborhoods_counts <- mutate(neighborhoods_counts, 
+                               tree_density = tree_cnt/area)
+```
+
+### Compute Average tree canopy by neighborhood
+
+```{r}
+# Confirm that you have the neighborhood density results
+head(neighborhoods)
+
+# Transform the neighborhoods CRS to match the canopy layer
+neighborhoods_crs <- st_transform(neighborhoods, crs = crs(canopy, asText = TRUE))
+
+# Convert neighborhoods object to a Spatial object
+neighborhoods_sp <- as(neighborhoods_crs, "Spatial")
+
+# Compute the mean of canopy values by neighborhood
+canopy_neighborhoods <- extract(canopy, neighborhoods_sp, fun = mean)
+
+# Add the mean canopy values to neighborhoods
+neighborhoods_avg_canopy <- mutate(neighborhoods, avg_canopy = canopy_neighborhoods)
+```

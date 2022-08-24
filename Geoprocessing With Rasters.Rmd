@@ -32,3 +32,62 @@ parks_sp <- as(parks_big, "Spatial")
 
 canopy_mask <- mask(canopy, mask=parks_sp)
 ```
+
+### Cropping
+
+```{r}
+# Convert the parks_big to a Spatial object
+parks_sp <- as(parks_big, "Spatial")
+
+# Mask the canopy with the large parks 
+canopy_mask <- mask(canopy, mask = parks_sp)
+
+# Plot the mask
+plot(canopy_mask)
+
+# Crop canopy with parks_sp
+canopy_crop <- crop(canopy, parks_sp)
+
+# Plot the cropped version and compare
+plot(canopy_crop)
+```
+
+### Extracting values from raster
+
+```{r}
+# Project the landmarks to match canopy
+landmarks_cp <- st_tranform(landmarks, crs = crs(canopy, asText = TRUE))
+
+# Convert the landmarks to a Spatial object
+landmarks_sp <- as(landmarks_cp, "Spatial")
+
+# Extract the canopy values at the landmarks
+landmarks_ex <- extract(canopy, landmarks_sp)
+
+# Look at the landmarks and extraction results
+landmarks_cp
+landmarks_ex
+```
+
+### Raster math with overlay
+
+Using the imperviousness layer from the USGS. Imperviousness measures whether water can pass through a surface. So a high percentage impervious surface might be a road that does not let water pass through while a low percentage impervious might be something like a lawn.
+
+We will identify the **most** urban locations by finding areas that have both a low percentage of tree canopy ([removed] 80%). To do this, we defined the function `f` to do the raster math for you.
+
+```{r}
+# read in data
+impervious <- raster("data/impervious.tif")
+
+# function f with 2 args and the raster math code
+
+f <- function(rast1, rast2) {
+  rast1 < 20 & rast2 > 80
+}
+
+# do the overlay using f as fun
+
+canopy_imperv_overlay <- overlay(canopy, impervious, fun = f)
+
+plot(canopy_imperv_overlay)
+```
