@@ -74,3 +74,49 @@ tm_shape(neighborhoods) +
                 style = "quantile", n = 7, 
                 title = "Average tree canopy (%)")
 ```
+
+```{r}
+# Create a map of the manhattan aerial photo
+tm_shape(manhattan) + 
+  tm_raster()
+```
+
+```{r}
+# Create a map of the neighborhood polygons
+tm_shape(neighborhoods) + 
+  tm_borders(col = "black", lwd = 0.5, alpha = 0.5)
+```
+
+```{r}
+# Combine the aerial photo and neighborhoods into one map
+map1 <- tm_shape(manhattan) + 
+  tm_raster() + 
+  tm_shape(neighborhoods) + 
+  tm_borders(col = "black", lwd = 0.5, alpha = 0.5)
+
+# Create the second map of tree measures
+map2 <- tm_shape(neighborhoods, bbox = bbox(manhattan)) +
+  tm_polygons(
+    c("tree_density", "avg_canopy"), 
+    style = "quantile",
+    palette = "Greens",
+    title = c("Tree Density", "Average Tree Canopy"))
+```
+
+```{r}
+# Combine the aerial photo and neighborhoods into one map
+map1 <- tm_shape(manhattan) + 
+    tm_raster() + 
+    tm_shape(neighborhoods) + 
+    tm_borders(col = "black", lwd = 0.5, alpha = 0.5)
+
+# Create the second map of tree measures
+map2 <- tm_shape(neighborhoods, bbox = bbox(manhattan)) +
+    tm_polygons(c("tree_density", "avg_canopy"), 
+                style = "quantile",
+                palette = "Greens",
+                title = c("Tree Density", "Average Tree Canopy")) 
+
+# Combine the two maps into one
+tmap_arrange(map1, map2, asp = NA)
+```
