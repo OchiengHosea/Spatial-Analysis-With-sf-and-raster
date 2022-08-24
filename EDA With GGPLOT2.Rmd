@@ -1,0 +1,76 @@
+---
+title: "EDA with GGPLOT2"
+author: "Duke"
+date: "2022-08-24"
+output: html_document
+---
+
+### Create plots
+
+```{r}
+# Load the ggplot2 package
+# Load the ggplot2 package
+library(ggplot2)
+
+# Create a histogram of tree density
+ggplot(neighborhoods, aes(x = tree_density)) + 
+  geom_histogram(color = "white")
+
+# Create a histogram of average canopy
+ggplot(neighborhoods, aes(x = avg_canopy)) + 
+  geom_histogram(color = "white")
+
+# Create a scatter plot of tree density vs avg canopy
+ggplot(neighborhoods, aes(x = tree_density, y = avg_canopy)) + 
+    geom_point() + 
+    stat_smooth()
+
+# Compute the correlation between density and canopy
+cor(neighborhoods$tree_density, neighborhoods$avg_canopy)
+```
+
+### Create a map using ggplot2
+
+```{r}
+# Plot the tree density with default colors
+ggplot(neighborhoods) + 
+  geom_sf(aes(fill = tree_density))
+
+# Plot the tree canopy with default colors
+ggplot(neighborhoods) + 
+  geom_sf(aes(fill = avg_canopy))
+  
+# Plot the tree density using scale_fill_gradient()
+ggplot(neighborhoods) + 
+  geom_sf(aes(fill = tree_density)) + 
+  scale_fill_gradient(low = "#edf8e9", high = "#005a32")
+
+# Plot the tree canopy using the scale_fill_gradient()
+ggplot(neighborhoods) + 
+  geom_sf(aes(fill = avg_canopy)) +
+  scale_fill_gradient(low = "#edf8e9", high = "#005a32")
+```
+
+### Create map using tmap
+
+```{r}
+# Create a simple map of neighborhoods
+tm_shape(neighborhoods) + 
+    tm_polygons()
+
+# Create a color-coded map of neighborhood tree density
+tm_shape(neighborhoods) + 
+    tm_polygons("tree_density")
+
+# Style the tree density map
+tm_shape(neighborhoods) + 
+    tm_polygons("tree_density", palette = "Greens", 
+                style = "quantile", n = 7, 
+                title = "Trees per sq. KM")
+
+# Create a similar map of average tree canopy
+tm_shape(neighborhoods) + 
+    tm_polygons("avg_canopy", palette = "Greens", 
+                style = "quantile", n = 7, 
+                title = "Average tree canopy (%)")
+```
